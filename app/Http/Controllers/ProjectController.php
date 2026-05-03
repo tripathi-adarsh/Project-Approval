@@ -17,7 +17,16 @@ class ProjectController extends Controller
 
     public function index(Request $request)
     {
-        $projects = $request->user()->projects()->latest()->paginate(10);
+        $query = $request->user()->projects()->latest();
+
+        if ($search = $request->input('search')) {
+            $query->where('title', 'like', "%{$search}%");
+        }
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        $projects = $query->paginate(10)->withQueryString();
         return view('projects.index', compact('projects'));
     }
 

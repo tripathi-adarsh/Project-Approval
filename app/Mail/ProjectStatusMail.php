@@ -22,8 +22,8 @@ class ProjectStatusMail extends Mailable
     {
         $subjects = [
             'submitted' => "Project Submitted: {$this->project->title}",
-            'approved'  => "✅ Project Approved: {$this->project->title}",
-            'rejected'  => "❌ Project Rejected: {$this->project->title}",
+            'approved'  => "Project Approved: {$this->project->title}",
+            'rejected'  => "Project Rejected: {$this->project->title}",
         ];
 
         return new Envelope(subject: $subjects[$this->event] ?? "Project Update");

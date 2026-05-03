@@ -97,7 +97,7 @@
 <aside class="sidebar">
     <a href="{{ route('dashboard') }}" class="sidebar-brand">
         <div class="brand-icon"><i class="bi bi-layers-fill text-white"></i></div>
-        ApprovalFlow
+        Project-Approval
     </a>
 
     <nav class="sidebar-nav">
@@ -130,6 +130,10 @@
            class="nav-link {{ request()->routeIs('admin.audit-logs.*') ? 'active' : '' }}">
             <i class="bi bi-journal-text"></i> Audit Logs
         </a>
+        <a href="{{ route('admin.users.index') }}"
+           class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+            <i class="bi bi-people"></i> Users
+        </a>
         @endif
     </nav>
 
@@ -147,11 +151,18 @@
 <div class="main-wrapper">
     <div class="topbar">
         <span class="topbar-title">@yield('page-title', 'Dashboard')</span>
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge rounded-pill {{ auth()->user()->isAdmin() ? 'bg-danger' : 'bg-primary' }}">
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge rounded-pill {{ auth()->user()->isAdmin() ? 'bg-danger' : 'bg-primary' }} px-3 py-2">
+                <i class="bi {{ auth()->user()->isAdmin() ? 'bi-shield-fill' : 'bi-person-fill' }} me-1"></i>
                 {{ ucfirst(auth()->user()->role) }}
             </span>
-            <span class="text-muted">{{ auth()->user()->name }}</span>
+            <div class="d-flex align-items-center gap-2">
+                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bold"
+                     style="width:32px;height:32px;font-size:.8rem;flex-shrink:0">
+                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                </div>
+                <span class="text-dark fw-semibold small">{{ auth()->user()->name }}</span>
+            </div>
         </div>
     </div>
 

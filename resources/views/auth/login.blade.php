@@ -62,11 +62,6 @@
         Don't have an account? <a href="{{ route('register') }}" class="text-decoration-none fw-semibold">Register</a>
     </p>
 
-    <div class="mt-3 p-3 bg-light rounded small text-muted">
-        <strong>Demo accounts:</strong><br>
-        Admin: admin@example.com / password<br>
-        User: user@example.com / password
-    </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

@@ -246,3 +246,9 @@ PATCH  /api/projects/{id}/approve
 ## License
 
 MIT
+
+🔹 Demo Video:
+https://drive.google.com/file/d/1O-N-Zu-IO7Mw2okKw3YNZl_MTM7Eq4sv/view?usp=sharing
+
+🔹 Code Explanation Video:
+https://drive.google.com/file/d/1C38xpbXE8PvQZOgIclHX10FajNcyIPWf/view?usp=sharing

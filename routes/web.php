@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectController;
@@ -24,6 +25,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/projects/{project}/approve', [ProjectController::class, 'approve'])->name('projects.approve');
         Route::patch('/projects/{project}/reject',  [ProjectController::class, 'reject'])->name('projects.reject');
         Route::get('/audit-logs',                   [AuditLogController::class, 'index'])->name('audit-logs.index');
+
+        Route::get('/users',                        [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/create',                 [UserController::class, 'create'])->name('users.create');
+        Route::post('/users',                       [UserController::class, 'store'])->name('users.store');
+        Route::delete('/users/{user}',              [UserController::class, 'destroy'])->name('users.destroy');
     });
 });
 

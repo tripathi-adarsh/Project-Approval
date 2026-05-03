@@ -4,47 +4,82 @@
 
 @section('content')
 
-{{-- Filters (standalone GET form — no nesting issue) --}}
+{{-- Header --}}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h5 class="mb-0 fw-bold text-dark">All Projects</h5>
+        <small class="text-muted">Review and manage submitted projects</small>
+    </div>
+    <span class="badge bg-primary rounded-pill fs-6 px-3">{{ $projects->total() }} Total</span>
+</div>
+
+{{-- Filters --}}
 <div class="card mb-3">
-    <div class="card-body py-2">
+    <div class="card-body py-3">
         <form method="GET" class="row g-2 align-items-end">
-            <div class="col-sm-3">
-                <label class="form-label small mb-1">Search</label>
-                <input type="text" name="search" class="form-control form-control-sm"
-                       value="{{ request('search') }}" placeholder="Project title...">
+            <div class="col-sm-4 col-md-4">
+                <label class="form-label small fw-semibold mb-1 text-muted">Search</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0"
+                           value="{{ request('search') }}" placeholder="Search by title...">
+                </div>
             </div>
             <div class="col-sm-2">
-                <label class="form-label small mb-1">Status</label>
+                <label class="form-label small fw-semibold mb-1 text-muted">Status</label>
                 <select name="status" class="form-select form-select-sm">
-                    <option value="">All</option>
+                    <option value="">All Statuses</option>
                     @foreach(['pending','approved','rejected'] as $s)
-                    <option value="{{ $s }}" {{ request('status')===$s?'selected':'' }}>{{ ucfirst($s) }}</option>
+                    <option value="{{ $s }}" {{ request('status')===$s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="col-sm-2">
-                <label class="form-label small mb-1">From</label>
+                <label class="form-label small fw-semibold mb-1 text-muted">From</label>
                 <input type="date" name="from" class="form-control form-control-sm" value="{{ request('from') }}">
             </div>
             <div class="col-sm-2">
-                <label class="form-label small mb-1">To</label>
+                <label class="form-label small fw-semibold mb-1 text-muted">To</label>
                 <input type="date" name="to" class="form-control form-control-sm" value="{{ request('to') }}">
             </div>
-            <div class="col-sm-1">
-                <button type="submit" class="btn btn-primary btn-sm w-100">
-                    <i class="bi bi-funnel"></i>
+            <div class="col-sm-auto d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm px-3">
+                    <i class="bi bi-funnel-fill me-1"></i>Filter
                 </button>
-            </div>
-            <div class="col-sm-1">
-                <a href="{{ route('admin.projects.index') }}" class="btn btn-outline-secondary btn-sm w-100">
-                    <i class="bi bi-x"></i>
+                @if(request()->hasAny(['search','status','from','to']))
+                <a href="{{ route('admin.projects.index') }}" class="btn btn-outline-secondary btn-sm px-3">
+                    <i class="bi bi-x-lg me-1"></i>Clear
                 </a>
+                @endif
             </div>
         </form>
     </div>
 </div>
 
-{{-- Bulk action toolbar (outside the table, no nested forms) --}}
+{{-- Active filter badges --}}
+@if(request()->hasAny(['search','status','from','to']))
+<div class="d-flex flex-wrap gap-2 mb-3">
+    @if(request('search'))
+    <span class="badge bg-light text-dark border">
+        <i class="bi bi-search me-1"></i>{{ request('search') }}
+    </span>
+    @endif
+    @if(request('status'))
+    <span class="badge bg-light text-dark border">
+        <i class="bi bi-circle-fill me-1 {{ request('status') === 'approved' ? 'text-success' : (request('status') === 'rejected' ? 'text-danger' : 'text-warning') }}" style="font-size:.5rem"></i>
+        {{ ucfirst(request('status')) }}
+    </span>
+    @endif
+    @if(request('from'))
+    <span class="badge bg-light text-dark border"><i class="bi bi-calendar me-1"></i>From: {{ request('from') }}</span>
+    @endif
+    @if(request('to'))
+    <span class="badge bg-light text-dark border"><i class="bi bi-calendar me-1"></i>To: {{ request('to') }}</span>
+    @endif
+</div>
+@endif
+
+{{-- Bulk action toolbar --}}
 <div class="d-flex gap-2 mb-2 align-items-center flex-wrap">
     <select class="form-select form-select-sm w-auto" id="bulkAction">
         <option value="">Bulk Action</option>
@@ -54,11 +89,12 @@
     <input type="text" id="bulkReason"
            class="form-control form-control-sm w-auto d-none"
            placeholder="Rejection reason (required)">
-    <button class="btn btn-sm btn-warning" onclick="submitBulk()">Apply</button>
-    <span class="text-muted small ms-auto">{{ $projects->total() }} project(s) found</span>
+    <button class="btn btn-sm btn-warning" onclick="submitBulk()">
+        <i class="bi bi-lightning-fill me-1"></i>Apply
+    </button>
 </div>
 
-{{-- Table (no forms inside — actions handled via JS hidden forms) --}}
+{{-- Table --}}
 <div class="card">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -68,12 +104,12 @@
                         <th style="width:40px">
                             <input type="checkbox" id="selectAll" class="form-check-input">
                         </th>
-                        <th>#</th>
+                        <th style="width:50px">#</th>
                         <th>Title</th>
                         <th>Submitted By</th>
                         <th>Status</th>
                         <th>Date</th>
-                        <th>Actions</th>
+                        <th style="width:120px">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -81,31 +117,41 @@
                     <tr>
                         <td>
                             @if($p->isPending())
-                            <input type="checkbox" value="{{ $p->id }}"
-                                   class="form-check-input row-check">
+                            <input type="checkbox" value="{{ $p->id }}" class="form-check-input row-check">
                             @endif
                         </td>
-                        <td class="text-muted">{{ $p->id }}</td>
+                        <td class="text-muted small">{{ $p->id }}</td>
                         <td>
                             <a href="{{ route('projects.show', $p) }}"
                                class="fw-semibold text-decoration-none text-dark">
-                                {{ Str::limit($p->title, 40) }}
+                                {{ Str::limit($p->title, 45) }}
                             </a>
+                            @if($p->file_path)
+                            <i class="bi bi-paperclip text-muted ms-1" title="Has attachment"></i>
+                            @endif
                         </td>
-                        <td class="text-muted">{{ $p->user->name }}</td>
                         <td>
-                            <span class="badge {{ $p->statusBadgeClass() }}">{{ ucfirst($p->status) }}</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white"
+                                     style="width:28px;height:28px;font-size:.7rem;flex-shrink:0">
+                                    {{ strtoupper(substr($p->user->name, 0, 1)) }}
+                                </div>
+                                <span class="text-muted small">{{ $p->user->name }}</span>
+                            </div>
                         </td>
-                        <td class="text-muted">{{ $p->created_at->format('d M Y') }}</td>
+                        <td>
+                            <span class="badge rounded-pill {{ $p->statusBadgeClass() }}">
+                                <i class="bi {{ $p->status === 'approved' ? 'bi-check-circle' : ($p->status === 'rejected' ? 'bi-x-circle' : 'bi-hourglass-split') }} me-1"></i>
+                                {{ ucfirst($p->status) }}
+                            </span>
+                        </td>
+                        <td class="text-muted small">{{ $p->created_at->format('d M Y') }}</td>
                         <td>
                             @if($p->isPending())
-                            {{-- Approve: JS submits a hidden PATCH form --}}
                             <button type="button" class="btn btn-sm btn-success"
-                                    onclick="approveProject({{ $p->id }})"
-                                    title="Approve">
+                                    onclick="approveProject({{ $p->id }})" title="Approve">
                                 <i class="bi bi-check-lg"></i>
                             </button>
-                            {{-- Reject: opens modal --}}
                             <button type="button" class="btn btn-sm btn-danger"
                                     data-bs-toggle="modal" data-bs-target="#rejectModal"
                                     data-id="{{ $p->id }}" data-title="{{ $p->title }}"
@@ -114,14 +160,24 @@
                             </button>
                             @else
                             <a href="{{ route('projects.show', $p) }}"
-                               class="btn btn-sm btn-outline-secondary">View</a>
+                               class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye me-1"></i>View
+                            </a>
                             @endif
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-5">
-                            <i class="bi bi-inbox fs-2 d-block mb-2"></i>No projects found.
+                        <td colspan="7" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-3 opacity-50"></i>
+                                @if(request()->hasAny(['search','status','from','to']))
+                                    <p class="mb-2 fw-semibold">No projects match your filters.</p>
+                                    <a href="{{ route('admin.projects.index') }}" class="btn btn-sm btn-outline-secondary">Clear Filters</a>
+                                @else
+                                    <p class="mb-0 fw-semibold">No projects found.</p>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @endforelse
@@ -130,48 +186,54 @@
         </div>
     </div>
     @if($projects->hasPages())
-    <div class="card-footer bg-white">{{ $projects->links() }}</div>
+    <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+        <small class="text-muted">
+            Showing {{ $projects->firstItem() }}–{{ $projects->lastItem() }} of {{ $projects->total() }} projects
+        </small>
+        {{ $projects->appends(request()->query())->links() }}
+    </div>
     @endif
 </div>
 
-{{-- ── Hidden forms (rendered outside table, submitted via JS) ── --}}
-
-{{-- Approve form (PATCH) --}}
+{{-- Hidden forms --}}
 <form method="POST" id="approveForm" class="d-none">
     @csrf
     <input type="hidden" name="_method" value="PATCH">
 </form>
 
-{{-- Bulk form (POST) --}}
 <form method="POST" action="{{ route('admin.projects.bulk') }}" id="bulkForm" class="d-none">
     @csrf
     <input type="hidden" name="action" id="bulkActionInput">
     <input type="hidden" name="reason" id="bulkReasonInput">
-    {{-- ids injected dynamically --}}
 </form>
 
 {{-- Reject Modal --}}
 <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <form method="POST" id="rejectForm" class="d-none">
             @csrf
             <input type="hidden" name="_method" value="PATCH">
             <textarea name="reason" id="rejectReasonHidden" class="d-none"></textarea>
         </form>
-
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Reject: <span id="modalTitle" class="text-danger"></span></h5>
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold text-danger"><i class="bi bi-x-circle me-2"></i>Reject Project</h5>
+                    <p class="text-muted small mb-0" id="modalTitle"></p>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <label class="form-label fw-semibold">Reason <span class="text-danger">*</span></label>
+            <div class="modal-body pt-3">
+                <label class="form-label fw-semibold small">Reason <span class="text-danger">*</span></label>
                 <textarea id="rejectReasonInput" rows="4" class="form-control"
-                          placeholder="Explain the rejection reason..." required></textarea>
+                          placeholder="Explain why this project is being rejected..."></textarea>
+                <div class="invalid-feedback d-none" id="rejectError">Reason is required.</div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" onclick="submitReject()">Confirm Reject</button>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger px-4" onclick="submitReject()">
+                    <i class="bi bi-x-lg me-1"></i>Confirm Reject
+                </button>
             </div>
         </div>
     </div>
@@ -214,9 +276,7 @@ function submitBulk() {
     if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} ${checked.length} project(s)?`)) return;
 
     const form = document.getElementById('bulkForm');
-
     form.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());
-
     checked.forEach(cb => {
         const input = document.createElement('input');
         input.type  = 'hidden';
@@ -227,7 +287,6 @@ function submitBulk() {
 
     document.getElementById('bulkActionInput').value = action;
     document.getElementById('bulkReasonInput').value = reason;
-
     form.submit();
 }
 
@@ -236,12 +295,15 @@ document.getElementById('rejectModal').addEventListener('show.bs.modal', functio
     document.getElementById('rejectForm').action = `/admin/projects/${btn.dataset.id}/reject`;
     document.getElementById('modalTitle').textContent = btn.dataset.title;
     document.getElementById('rejectReasonInput').value = '';
+    document.getElementById('rejectReasonInput').classList.remove('is-invalid');
+    document.getElementById('rejectError').classList.add('d-none');
 });
 
 function submitReject() {
     const reason = document.getElementById('rejectReasonInput').value.trim();
     if (!reason) {
         document.getElementById('rejectReasonInput').classList.add('is-invalid');
+        document.getElementById('rejectError').classList.remove('d-none');
         return;
     }
     document.getElementById('rejectReasonHidden').value = reason;
